@@ -50,7 +50,7 @@ result = rank(ranker, query, passages)
 
 Here's a brief outline of how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline.
 
-For a full example, see [examples/prompting_tools_integration.jl](examples/prompting_tools_integration.jl).
+For a full example, see `examples/prompting_tools_integration.jl`.
 
 ```julia
 using FlashRank
