@@ -2,9 +2,9 @@
 CurrentModule = FlashRank
 ```
 
-# FlashRank
+# API Reference
 
-Documentation for [FlashRank](https://github.com/svilupp/FlashRank.jl).
+API reference for [FlashRank](https://github.com/svilupp/FlashRank.jl).
 
 ```@index
 ```
