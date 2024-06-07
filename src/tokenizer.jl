@@ -91,3 +91,58 @@ bert_uncased_tokenizer(input) = _bert_tokenise(input, Val(true))
 Google bert tokenizer which remain the case during tokenization. Recommended for multi-lingual data.
 """
 bert_cased_tokenizer(input) = _bert_tokenise(input, Val(false))
+
+function extract_added_token(added_token)
+    vidx = added_token["id"] + 1
+    token = added_token["content"]
+    isspecial = added_token["special"]
+
+    added_token["rstrip"] ||
+        added_token["lstrip"] && tokenizer_warn(
+            "match token `$token` require to match with space on either side but that is not implemented here"
+        )
+    added_token["single_word"] && tokenizer_warn(
+        "match token `$token` does not match inside of a word but that is not implemented here"
+    )
+    return vidx, token, isspecial
+end
+
+extract_and_add_tokens!(::Nothing, _) = nothing
+function extract_and_add_tokens!(added_token_list, vocab_list)
+    iszero(length(added_token_list)) && return nothing
+    added_token_list = sort(added_token_list; by = Base.Fix2(getindex, "id"))
+    match_tokens = String[]
+    for added_token in added_token_list
+        vidx, token, isspecial = extract_added_token(added_token)
+        if isspecial
+            if vidx > length(vocab_list)
+                # special tokens not in the vocab already
+                @assert vidx == length(vocab_list) + 1
+                push!(vocab_list, token)
+            end
+            @assert vocab_list[vidx] == token
+        else
+            n_vocab = length(vocab_list)
+            if vidx == n_vocab + 1
+                push!(vocab_list, token)
+            elseif vidx <= n_vocab
+                @assert vocab_list[vidx]==token "Two word has same index: $(token) and $(vocab_list[idx])"
+            else
+                error("There is a gap in the vocabulary")
+            end
+        end
+        push!(match_tokens, token)
+    end
+    return match_tokens
+end
+
+function reverse_keymap_to_list(dict)
+    vocab_list = Vector{String}(undef, length(dict))
+    for (k, v) in dict
+        v += 1
+        @assert !isassigned(vocab_list, v) "Two word has same index: $(k) and $(vocab_list[v])"
+        vocab_list[v] = String(k)
+    end
+    @assert all(Base.Fix1(isassigned, vocab_list), eachindex(vocab_list)) "There is a gap in the vocabulary"
+    return vocab_list
+end

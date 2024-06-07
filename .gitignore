@@ -4,3 +4,10 @@
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/
+
+## MacOS
+**/.DS_Store
+**/.vscode
+
+# exclude scratch files
+**/_*

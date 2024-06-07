@@ -9,11 +9,15 @@ using StringViews
 import DoubleArrayTries
 using DoubleArrayTries: DoubleArrayTrie
 const DAT = DoubleArrayTries
+using DataDeps
 
 include("tokenizer.jl")
 include("wordpiece.jl")
 include("encoder.jl")
-include("models.jl")
+include("loader.jl")
+
+export RankerModel, RankResult
+## export rank # not exported to avoid name clash with PromptingTools
 include("ranking.jl")
 
 end

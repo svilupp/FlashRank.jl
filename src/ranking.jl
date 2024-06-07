@@ -1,15 +1,26 @@
 
 abstract type AbstractRankerModel end
 
+"""
+    RankerModel
+
+A model for ranking passages, including the encoder and the ONNX session for inference.
+
+For ranking, use as `rank(ranker, query, passages)` or as a functor `ranker(query, passages)`.
+
+"""
 struct RankerModel <: AbstractRankerModel
-    model_type::Symbol
-    encoder::Any
-    onnx_model::Any
+    alias::Symbol
+    encoder::BertTextEncoder
+    session::ORT.InferenceSession
+end
+function Base.show(io::IO, result::AbstractRankerModel)
+    dump(io, result; maxdepth = 1)
 end
 
-function RankerModel(model_type::Symbol)
-    encoder, onnx_model = load_model(model_type)
-    new(model_type, encoder, onnx_model)
+function RankerModel(alias::Symbol = :tiny)
+    encoder, session = load_model(alias)
+    RankerModel(alias, encoder, session)
 end
 
 struct RankResult{T <: AbstractString}
@@ -19,24 +30,43 @@ struct RankResult{T <: AbstractString}
     scores::Vector{Float32}
     elapsed::Float64
 end
+function Base.show(io::IO, result::RankResult)
+    dump(io, result; maxdepth = 1)
+end
 
-using LinearAlgebra: exp
-using Statistics: mean
+"""
+    rank(
+        ranker::RankerModel, query::AbstractString, passages::AbstractVector{<:AbstractString};
+        top_n = length(passages))
 
-function rank(ranker::RankerModel, query::String, docs::Vector{Dict})
+Ranks `passages` for a given `query` using the given `ranker` model. Ranking should determine higher suitability to provide an answer to the query (higher score is better).
+
+# Arguments:
+- `ranker::RankerModel`: The ranker model to use.
+- `query::AbstractString`: The query to rank passages for.
+- `passages::AbstractVector{<:AbstractString}`: The passages to rank.
+- `top_n`: The number of most relevant documents to return. Default is `length(passages)`.
+"""
+function rank(
+        ranker::RankerModel, query::AbstractString, passages::AbstractVector{<:AbstractString};
+        top_n = length(passages))
     t = @elapsed begin
-        passages = [doc["text"] for doc in docs]
         token_ids, token_type_ids, attention_mask = encode(ranker.encoder, query, passages)
         onnx_input = Dict("input_ids" => token_ids', "token_type_ids" => token_type_ids',
             "attention_mask" => attention_mask')
-        out = ranker.onnx_model(onnx_input)
+        out = ranker.session(onnx_input)
     end
     # Sort and prepare results
     logits = out["logits"]
     @assert size(logits, 2)==1 "Logits are not binary, more than one class detected"
-    probas = @. 1 / (1 + exp(-vec(logits)))
-    sorted_indices = sortperm(probas, rev = true)
+    probas = 1 ./ (1 .+ exp.(-vec(logits)))
+    sorted_indices = sortperm(probas, rev = true) |> x -> first(x, top_n)
     sorted_passages = passages[sorted_indices]
     RankResult(
-        query, sorted_passages, sorted_indices, scores[sorted_indices] .|> Float32, t)
+        query, sorted_passages, sorted_indices, @view(probas[sorted_indices]) .|> Float32, t)
+end
+
+function (ranker::RankerModel)(
+        query::AbstractString, passages::AbstractVector{<:AbstractString})
+    rank(ranker, query, passages)
 end

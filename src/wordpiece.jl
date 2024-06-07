@@ -1,8 +1,23 @@
 ## This code is forked from Transformers.jl: https://github.com/chengchingwen/Transformers.jl
+"""
+    WordPiece
 
+WordPiece is a tokenizer that splits a string into a sequence of KNOWN sub-word tokens (or token IDs).
+It uses a double array trie to store the vocabulary and the index of the vocabulary.
+
+Implementation is based on: https://github.com/chengchingwen/Transformers.jl
+
+# Fields
+- `trie::DoubleArrayTrie`: The double array trie of the vocabulary (for fast lookups of tokens).
+- `index::Vector{Int}`: The index of the vocabulary. It is 0-based as we provide token IDs to models trained in python.
+- `unki::Int`: The index of the unknown token in the TRIE (ie, this is not the token ID, but the trie index).
+- `max_char::Int`: The maximum number of characters in a token. Default is 200.
+- `subword_prefix::String`: The prefix of a sub-word token. Default is "##".
+"""
 struct WordPiece
     trie::DoubleArrayTrie
-    ## index::DAT.CVector # changed due to bugs?
+    ## index::DAT.CVector # changed due to bugs
+    ## Returns 0-based indexing as we provide it to models trained in python
     index::Vector{Int}
     unki::Int
     max_char::Int
@@ -15,7 +30,7 @@ function WordPiece(vocab_list::Vector{String}, unk::String = "[UNK]";
     unki = DAT.lookup(trie, unk)
     index = Vector{Int}(undef, length(vocab_list))
     for (i, str) in enumerate(vocab_list)
-        index[DAT.lookup(trie, str)] = i
+        index[DAT.lookup(trie, str)] = i - 1
     end
     return WordPiece(trie, index, unki, max_char, subword_prefix)
 end
@@ -39,9 +54,16 @@ end
 Base.length(x::_WithPrefix) = x.length
 Base.size(x::_WithPrefix) = (length(x),)
 
-# TODO: add boolean flag to return the token IDs directly
-function (wp::WordPiece)(x)
-    result = Vector{String}()
+"""
+    (wp::WordPiece; token_ids::Bool = false)(x)
+
+WordPiece functor that tokenizes a string into a sequence of tokens (or token IDs).
+
+# Arguments
+- `token_ids::Bool = false`: If true, return the token IDs directly. Otherwise, return the tokens.
+"""
+function (wp::WordPiece)(x::AbstractString; token_ids::Bool = false)
+    result = token_ids ? Vector{Int}() : Vector{String}()
     isempty(x) && return result
     len = ncodeunits(x)
     failed = true
@@ -59,7 +81,11 @@ function (wp::WordPiece)(x)
                 if iszero(id)
                     e = prevind(x, e)
                 else
-                    push!(result, DAT.decode(wp.trie, id))
+                    if token_ids
+                        @inbounds push!(result, wp.index[id])
+                    else
+                        push!(result, DAT.decode(wp.trie, id))
+                    end
                     failed = false
                     s = nextind(x, e)
                     break
@@ -71,7 +97,11 @@ function (wp::WordPiece)(x)
 
     if failed
         empty!(result)
-        push!(result, DAT.decode(wp.trie, wp.unki))
+        if token_ids
+            @inbounds push!(result, wp.index[wp.unki])
+        else
+            push!(result, DAT.decode(wp.trie, wp.unki))
+        end
     end
     return result
 end
