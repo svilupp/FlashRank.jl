@@ -6,5 +6,7 @@ using Aqua
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(FlashRank)
     end
+    include("loader.jl")
     include("encoder.jl")
+    include("ranking.jl")
 end

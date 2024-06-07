@@ -40,6 +40,7 @@ result = rank(ranker, query, passages)
 ```
 
 Here's how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline:
+
 ```julia
 using FlashRank
 using PromptingTools
@@ -51,12 +52,27 @@ struct FlashRanker <: RT.AbstractReranker
     model::RankerModel
 end
 
-ranker = RankerModel(:tiny) |> FlashRanker
+# Wrap the model to be a valid Ranker recognized by RAGTools
+# It will be provided to the airag/rerank function to avoid instantiating it on every call
+reranker = RankerModel(:tiny) |> FlashRanker
 
-## TODO: extend rerank method
-function RT.rerank(ranker::FlashRanker,index::RT.AbstractIndex, query::AbstractString)
+# Define the method for ranking with it
+function RT.rerank(
+        reranker::FlashRanker, index::AbstractDocumentIndex, question::AbstractString,
+        candidates::AbstractCandidateChunks;
+        verbose::Bool = false,
+        top_n::Integer = length(candidates.scores),
+        return_documents::Bool = false,
+        cost_tracker = Threads.Atomic{Float64}(0.0),
+        kwargs...)
     # TODO: finish
 end
+
+## Apply to the pipeline configuration, eg, 
+cfg = RAGConfig(; retriever=AdvancedRetriever(; reranker))
+## assumes existing index
+question = "Tell me about prehistoric animals"
+result = airag(cfg, index; question, return_all = true)
 ```
 
 ## Acknowledgments

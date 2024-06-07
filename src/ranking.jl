@@ -52,6 +52,9 @@ function rank(
         top_n = length(passages))
     t = @elapsed begin
         token_ids, token_type_ids, attention_mask = encode(ranker.encoder, query, passages)
+        ## transpose as the model expects row-major
+        ## TODO: investigate pre-warming the session with padded inputs
+        ## TODO: investigate performnance on materialized inputs
         onnx_input = Dict("input_ids" => token_ids', "token_type_ids" => token_type_ids',
             "attention_mask" => attention_mask')
         out = ranker.session(onnx_input)

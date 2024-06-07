@@ -76,13 +76,14 @@ end
 function encode(enc::BertTextEncoder, query::AbstractString,
         passage::AbstractString; add_special_tokens::Bool = true)
     ## Tokenize texts
-    token_ids = tokenize(enc, query; add_special_tokens, token_ids = true)
+    token_ids1 = tokenize(enc, query; add_special_tokens, token_ids = true)
     token_ids2 = tokenize(enc, passage; add_special_tokens = false,
         add_end_token = add_special_tokens, token_ids = true)
-    token_type_ids = vcat(zeros(Int, length(token_ids)), ones(Int, length(token_ids2)))
+    token_type_ids = vcat(zeros(Int, length(token_ids1)), ones(Int, length(token_ids2)))
+    token_ids = vcat(token_ids1, token_ids2)
 
     ## check if we exceed truncation
-    if !isnothing(enc.trunc) && (length(token_ids) + length(token_ids2)) > enc.trunc
+    if !isnothing(enc.trunc) && (length(token_ids)) > enc.trunc
         token_ids = first(token_ids, enc.trunc)
         ## add [SEP] token
         token_ids[end] = enc.vocab[enc.endsym]
@@ -104,7 +105,7 @@ function encode(enc::BertTextEncoder, query::AbstractString,
                            add_end_token = add_special_tokens, token_ids = true)
                        for passage in passages]
     len_ = maximum(length, tokens_ids2_vec) + length(token_ids1) |>
-           x -> isnothing(enc.trunc) ? x : max(x, enc.trunc)
+           x -> isnothing(enc.trunc) ? x : min(x, enc.trunc)
 
     ## Assumes that padding is done with token ID 0
     token_ids = zeros(Int, len_, length(passages))
