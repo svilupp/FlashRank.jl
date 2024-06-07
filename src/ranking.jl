@@ -70,6 +70,6 @@ function rank(
 end
 
 function (ranker::RankerModel)(
-        query::AbstractString, passages::AbstractVector{<:AbstractString})
-    rank(ranker, query, passages)
+        query::AbstractString, passages::AbstractVector{<:AbstractString}; kwargs...)
+    rank(ranker, query, passages; kwargs...)
 end

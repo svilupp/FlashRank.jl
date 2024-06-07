@@ -49,14 +49,14 @@ using FlashRank: RankerModel, tokenize, encode
 
     # Test 4: Concatenated words and compound words
     s4 = "The antiestablishmentarianism sentiment was growing among the populace."
-    tokens = tokenize(encoder, s3)
+    tokens = tokenize(encoder, s4)
     expected_tokens = [
         "[CLS]", "the", "anti", "##est", "##ab", "##lish", "##ment", "##arian", "##ism",
         "sentiment", "was", "growing", "among", "the", "populace", ".", "[SEP]"]
     expected_ids = [101, 1996, 3424, 4355, 7875, 13602, 3672, 12199, 2964,
         15792, 2001, 3652, 2426, 1996, 22508, 1012, 102]
     @test tokens == expected_tokens
-    out = encode(encoder, s3)
+    out = encode(encoder, s4)
     @test out[1] == expected_ids
     @test length(out[1]) == length(out[2]) == length(out[3])
     @test out[3] == ones(length(out[1]))

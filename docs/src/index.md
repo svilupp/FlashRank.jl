@@ -2,7 +2,9 @@
 CurrentModule = FlashRank
 ```
 
-# FlashRank
+# FlashRank.jl
+
+FlashRank.jl is inspired by the awesome [FlashRank Python package](https://github.com/PrithivirajDamodaran/FlashRank), originally developed by Prithiviraj Damodaran. This package leverages model weights from [Prithiviraj's repository on Hugging Face](https://huggingface.co/prithivida/flashrank) and provides a fast and efficient way to rank documents relevant to any given query without GPUs and large dependencies. This enhances Retrieval Augmented Generation (RAG) pipelines by prioritizing the most suitable documents. The smallest model can be run on almost any machine.
 
 ## Features
 - Two ranking models:
@@ -35,19 +37,45 @@ passages = [
         "vLLM is a fast and easy-to-use library for LLM inference and serving. vLLM is fast with: State-of-the-art serving throughput Efficient management of attention key and value memory with PagedAttention Continuous batching of incoming requests Optimized CUDA kernels",
 ];
 
+
 result = rank(ranker, query, passages)
 ```
 
-Here's how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline:
+`result` is of type `RankResult` and contains the sorted passages, their scores (0-1, where 1 is the best) and the positions of the sorted documents (referring to the original `passages` vector).
+
+Here's a brief outline of how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline.
+
+For a full example, see [examples/prompting_tools_integration.jl](examples/prompting_tools_integration.jl).
+
 ```julia
+using FlashRank
 using PromptingTools
 using PromptingTools.Experimental.RAGTools
 const RT = PromptingTools.Experimental.RAGTools
 
-## TODO: extend rank method
+# Wrap the model to be a valid Ranker recognized by RAGTools
+# It will be provided to the airag/rerank function to avoid instantiating it on every call
+struct FlashRanker <: RT.AbstractReranker
+    model::RankerModel
+end
+reranker = RankerModel(:tiny) |> FlashRanker
+
+# Define the method for ranking with it
+function RT.rerank(
+        reranker::FlashRanker, index::RT.AbstractDocumentIndex, question::AbstractString,
+        candidates::RT.AbstractCandidateChunks; kwargs...)
+    ## omitted for brevity
+    ## See examples/prompting_tools_integration.jl for details
+end
+
+## Apply to the pipeline configuration, eg, 
+cfg = RAGConfig(; retriever=RT.AdvancedRetriever(; reranker))
+## assumes existing index
+question = "Tell me about prehistoric animals"
+result = airag(cfg, index; question, return_all = true)
 ```
 
 ## Acknowledgments
 - [FlashRank](https://github.com/PrithivirajDamodaran/FlashRank) and [Transformers.jl](https://github.com/chengchingwen/Transformers.jl) have been essential in the development of this package.
 - Special thanks to Prithiviraj Damodaran for the original FlashRank and model weights.
-- Transformers.jl for the WordPiece implementation and BERT tokenizer which have been forked for this package.
+- And to Transformers.jl for the WordPiece implementation and BERT tokenizer which have been forked for this package (to minimize dependencies).

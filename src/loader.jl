@@ -1,20 +1,3 @@
-## Acknowledgement: The weights come from Prithiviraj Damodaran's HF space: https://huggingface.co/prithivida/flashrank/tree/main
-
-register(DataDep("ms-marco-TinyBERT-L-2-v2",
-    """
-    TinyBERT-L-2-v2 cross-encoder trained on the ms-marco dataset.
-    """,
-    "https://huggingface.co/prithivida/flashrank/resolve/main/ms-marco-TinyBERT-L-2-v2.zip";
-    post_fetch_method = unpack
-));
-register(DataDep("ms-marco-MiniLM-L-12-v2",
-    """
-    MiniLM-L-12-v2 cross-encoder trained on the ms-marco dataset.
-    """,
-    "https://huggingface.co/prithivida/flashrank/resolve/main/ms-marco-MiniLM-L-12-v2.zip";
-    post_fetch_method = unpack
-));
-
 # finds specified file in any subfolder
 function find_file(path::String, needle::String)
     for (root, _, files) in walkdir(path)

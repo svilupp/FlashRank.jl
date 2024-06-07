@@ -39,7 +39,11 @@ passages = [
 result = rank(ranker, query, passages)
 ```
 
-Here's how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline:
+`result` is of type `RankResult` and contains the sorted passages, their scores (0-1, where 1 is the best) and the positions of the sorted documents (referring to the original `passages` vector).
+
+Here's a brief outline of how you can integrate FlashRank.jl into your [PromptingTools.jl](https://github.com/svilupp/PromptingTools.jl) RAG pipeline.
+
+For a full example, see [examples/prompting_tools_integration.jl](examples/prompting_tools_integration.jl).
 
 ```julia
 using FlashRank
@@ -47,29 +51,23 @@ using PromptingTools
 using PromptingTools.Experimental.RAGTools
 const RT = PromptingTools.Experimental.RAGTools
 
-
+# Wrap the model to be a valid Ranker recognized by RAGTools
+# It will be provided to the airag/rerank function to avoid instantiating it on every call
 struct FlashRanker <: RT.AbstractReranker
     model::RankerModel
 end
-
-# Wrap the model to be a valid Ranker recognized by RAGTools
-# It will be provided to the airag/rerank function to avoid instantiating it on every call
 reranker = RankerModel(:tiny) |> FlashRanker
 
 # Define the method for ranking with it
 function RT.rerank(
-        reranker::FlashRanker, index::AbstractDocumentIndex, question::AbstractString,
-        candidates::AbstractCandidateChunks;
-        verbose::Bool = false,
-        top_n::Integer = length(candidates.scores),
-        return_documents::Bool = false,
-        cost_tracker = Threads.Atomic{Float64}(0.0),
-        kwargs...)
-    # TODO: finish
+        reranker::FlashRanker, index::RT.AbstractDocumentIndex, question::AbstractString,
+        candidates::RT.AbstractCandidateChunks; kwargs...)
+    ## omitted for brevity
+    ## See examples/prompting_tools_integration.jl for details
 end
 
 ## Apply to the pipeline configuration, eg, 
-cfg = RAGConfig(; retriever=AdvancedRetriever(; reranker))
+cfg = RAGConfig(; retriever=RT.AdvancedRetriever(; reranker))
 ## assumes existing index
 question = "Tell me about prehistoric animals"
 result = airag(cfg, index; question, return_all = true)

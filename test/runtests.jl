@@ -4,7 +4,8 @@ using Aqua
 
 @testset "FlashRank.jl" begin
     @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(FlashRank)
+        ## skip ambiguities due to DAT and StringViews fails
+        Aqua.test_all(FlashRank; ambiguities = false)
     end
     include("loader.jl")
     include("encoder.jl")
