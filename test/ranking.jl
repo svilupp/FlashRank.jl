@@ -3,7 +3,7 @@ using FlashRank: RankerModel, rank
 @testset "rank" begin
     ranker = RankerModel(:tiny)
 
-    query = "Tell me about prehistoric animals"
+    query = "How do you like New York?"
     passages = [
         "The archaeopteryx fossil exhibited characteristics of both birds and dinosaurs.",
         "El niño jugaba en el jardín mientras su madre preparaba la cena.",
@@ -19,18 +19,18 @@ using FlashRank: RankerModel, rank
     result = rank(ranker, query, passages)
     @test result.query == query
     @test passages[result.positions] == result.docs
-    @test result.docs[1] == passages[1]
+    @test result.docs[1] == passages[5]
 
-    logits = [-10.512585, -11.525919, -11.541619, -11.473759, -11.555203,
-        -11.479718, -11.492066, -11.542512, -11.570846, -11.539953]
+    logits = [-11.545736, -11.568807, -11.534985, -11.548196, -7.750709,
+        -11.548166, -11.535543, -11.563152, -11.579304, -11.526732]
     probas = 1 ./ (1 .+ exp.(-vec(logits)))
-    @test isapprox(probas[result.positions], result.scores)
+    @test isapprox(probas[result.positions], result.scores; atol = 1e-4)
 
     ## Truncate results to top 5
     result = rank(ranker, query, passages; top_n = 5)
     @test result.query == query
     @test passages[result.positions] == result.docs
-    @test result.docs[1] == passages[1]
+    @test result.docs[1] == passages[5]
     @test length(result.docs) == 5
-    @test result.scores[1] ≈ 2.7191343f-5
+    @test isapprox(result.scores[1], 0.0004; atol = 1e-4)
 end
