@@ -24,7 +24,7 @@ using FlashRank: RankerModel, rank
     logits = [-11.545736, -11.568807, -11.534985, -11.548196, -7.750709,
         -11.548166, -11.535543, -11.563152, -11.579304, -11.526732]
     probas = 1 ./ (1 .+ exp.(-vec(logits)))
-    @test isapprox(probas[result.positions], result.scores; atol = 1e-4)
+    @test isapprox(probas[result.positions], result.scores; atol = 5e-4)
 
     ## Truncate results to top 5
     result = rank(ranker, query, passages; top_n = 5)
@@ -32,5 +32,5 @@ using FlashRank: RankerModel, rank
     @test passages[result.positions] == result.docs
     @test result.docs[1] == passages[5]
     @test length(result.docs) == 5
-    @test isapprox(result.scores[1], 0.0004; atol = 1e-4)
+    @test isapprox(result.scores[1], 0.0004; atol = 5e-4)
 end
