@@ -6,9 +6,14 @@ FlashRank.jl is inspired by the awesome [FlashRank Python package](https://githu
 
 ## Features
 - Two ranking models:
-  - **Tiny (~4MB):** [ms-marco-TinyBERT-L-2-v2 (default)](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2)
-  - **Mini (~23MB):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2)
+  - **Tiny (~4MB):** [ms-marco-TinyBERT-L-2-v2 (default)](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) (alias `:tiny`)
+  - **Mini (~23MB):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) (alias `:mini`)
 - Lightweight dependencies, avoiding heavy frameworks like Flux and CUDA for ease of integration.
+
+How fast is it? 
+With the Tiny model, you can rank 100 documents in ~0.1 seconds on a laptop. With the Mini model, you can rank 20 documents in ~0.5 seconds to pick the best chunks for your context.
+
+Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
 ## Installation
 To install FlashRank.jl, simply add this repository (package is not yet registered).

@@ -6,6 +6,10 @@ using PromptingTools.Experimental.RAGTools
 const RT = PromptingTools.Experimental.RAGTools
 using FlashRank
 
+# Enable model downloading, otherwise you always have to approve it
+# see https://www.oxinabox.net/DataDeps.jl/dev/z10-for-end-users/
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
 # Define a type of AbstractReranker
 struct FlashRanker <: RT.AbstractReranker
     model::RankerModel
@@ -29,7 +33,7 @@ function RT.rerank(
     ## Unwrap re-ranked positions
     scores = result.scores
     positions = candidates.positions[result.positions]
-    index_ids = if candidates isa MultiCandidateChunks
+    index_ids = if candidates isa RT.MultiCandidateChunks
         candidates.index_ids[result.positions]
     else
         candidates.index_id
@@ -70,7 +74,8 @@ index = build_index(
 
 # Wrap the model to be a valid Ranker recognized by RAGTools
 # It will be provided to the airag/rerank function to avoid instantiating it on every call
-reranker = RankerModel(:tiny) |> FlashRanker
+reranker = RankerModel(:mini) |> FlashRanker
+# You can choose :tiny or :mini
 
 ## Apply to the pipeline configuration, eg, 
 cfg = RAGConfig(; retriever = AdvancedRetriever(; reranker))
@@ -78,3 +83,7 @@ cfg = RAGConfig(; retriever = AdvancedRetriever(; reranker))
 # Ask a question
 question = "What are the best practices for parallel computing in Julia?"
 result = airag(cfg, index; question, return_all = true)
+
+# Review the reranking step results
+result.reranked_candidates
+index[result.reranked_candidates]
