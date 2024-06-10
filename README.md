@@ -9,15 +9,15 @@ This enhances Retrieval Augmented Generation (RAG) pipelines by prioritizing the
 ## Features
 - Four ranking models:
   - **Tiny (~4MB, INT8):** [ms-marco-TinyBERT-L-2-v2 (default)](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) (alias `:tiny`)
-  - **Mini L-4 (~70MB, FP32):** [ms-marco-MiniLM-L-4-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-4-v2) (alias `:mini4`)
-  - **Mini L-6 (~83.4MB, FP32):** [ms-marco-MiniLM-L-6-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) (alias `:mini6`)
-  - **Mini L-12 (~23MB, INT8):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) (alias `:mini` or `mini12`)
+  - **MiniLM L-4 (~70MB, FP32):** [ms-marco-MiniLM-L-4-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-4-v2) (alias `:mini4`)
+  - **MiniLM L-6 (~83.4MB, FP32):** [ms-marco-MiniLM-L-6-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) (alias `:mini6`)
+  - **MiniLM L-12 (~23MB, INT8):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) (alias `:mini` or `mini12`)
 - Lightweight dependencies, avoiding heavy frameworks like Flux and CUDA for ease of integration.
 
 How fast is it? 
-With the Tiny model, you can rank 100 documents in ~0.1 seconds on a laptop. With the Mini (12 layers) model, you can rank 100 documents in ~0.4 seconds.
+With the Tiny model, you can rank 100 documents in ~0.1 seconds on a laptop. With the MiniLM (12 layers) model, you can rank 100 documents in ~0.4 seconds.
 
-Tip: Pick the largest model that you can afford with your latency budget, ie, L-12 is the slowest but has the best accuracy.
+Tip: Pick the largest model that you can afford with your latency budget, ie, MiniLM L-12 is the slowest but has the best accuracy.
 
 Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
@@ -86,9 +86,8 @@ result = airag(cfg, index; question, return_all = true)
 
 ## Acknowledgments
 - [FlashRank](https://github.com/PrithivirajDamodaran/FlashRank) and [Transformers.jl](https://github.com/chengchingwen/Transformers.jl) have been essential in the development of this package.
-- Special thanks to Prithiviraj Damodaran for the original FlashRank and model weights.
+- Special thanks to Prithiviraj Damodaran for the original FlashRank and the INT8 quantized model weights.
 - And to Transformers.jl for the WordPiece implementation and BERT tokenizer which have been forked for this package (to minimize dependencies).
 
 ## Roadmap
 - [ ] Provide package extension for PromptingTools
-- [ ] Extend support for more models

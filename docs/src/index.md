@@ -7,13 +7,17 @@ CurrentModule = FlashRank
 FlashRank.jl is inspired by the awesome [FlashRank Python package](https://github.com/PrithivirajDamodaran/FlashRank), originally developed by Prithiviraj Damodaran. This package leverages model weights from [Prithiviraj's repository on Hugging Face](https://huggingface.co/prithivida/flashrank) and provides a fast and efficient way to rank documents relevant to any given query without GPUs and large dependencies. This enhances Retrieval Augmented Generation (RAG) pipelines by prioritizing the most suitable documents. The smallest model can be run on almost any machine.
 
 ## Features
-- Two ranking models:
-  - **Tiny (~4MB):** [ms-marco-TinyBERT-L-2-v2 (default)](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) (alias `:tiny`)
-  - **Mini (~23MB):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) (alias `:mini`)
+- Four ranking models:
+  - **Tiny (~4MB, INT8):** [ms-marco-TinyBERT-L-2-v2 (default)](https://huggingface.co/cross-encoder/ms-marco-TinyBERT-L-2) (alias `:tiny`)
+  - **MiniLM L-4 (~70MB, FP32):** [ms-marco-MiniLM-L-4-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-4-v2) (alias `:mini4`)
+  - **MiniLM L-6 (~83.4MB, FP32):** [ms-marco-MiniLM-L-6-v2 ONNX](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) (alias `:mini6`)
+  - **MiniLM L-12 (~23MB, INT8):** [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2) (alias `:mini` or `mini12`)
 - Lightweight dependencies, avoiding heavy frameworks like Flux and CUDA for ease of integration.
 
 How fast is it? 
-With the Tiny model, you can rank 100 documents in ~0.1 seconds on a laptop. With the Mini model, you can rank 20 documents in ~0.5 seconds to pick the best chunks for your context.
+With the Tiny model, you can rank 100 documents in ~0.1 seconds on a laptop. With the MiniLM (12 layers) model, you can rank 100 documents in ~0.4 seconds.
+
+Tip: Pick the largest model that you can afford with your latency budget, ie, MiniLM L-12 is the slowest but has the best accuracy.
 
 Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
