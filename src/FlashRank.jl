@@ -36,6 +36,20 @@ function __init__()
         "https://huggingface.co/prithivida/flashrank/resolve/main/ms-marco-MiniLM-L-12-v2.zip";
         post_fetch_method = unpack
     ))
+    register(DataDep("ms-marco-MiniLM-L-4-v2",
+        """
+        MiniLM-L-4-v2 cross-encoder trained on the ms-marco dataset, FP32 precision.
+        """,
+        "https://huggingface.co/svilupp/onnx-cross-encoders/resolve/main/ms-marco-MiniLM-L-4-v2-onnx.zip";
+        post_fetch_method = unpack
+    ))
+    register(DataDep("ms-marco-MiniLM-L-6-v2",
+        """
+        MiniLM-L-6-v2 cross-encoder trained on the ms-marco dataset, FP32 precision.
+        """,
+        "https://huggingface.co/svilupp/onnx-cross-encoders/resolve/main/ms-marco-MiniLM-L-6-v2-onnx.zip";
+        post_fetch_method = unpack
+    ))
 end
 
 end
