@@ -1,4 +1,4 @@
-using FlashRank: RankerModel, rank
+using FlashRank: RankerModel, rank, RankResult
 
 @testset "rank" begin
     ranker = RankerModel(:tiny)
@@ -33,4 +33,25 @@ using FlashRank: RankerModel, rank
     @test result.docs[1] == passages[5]
     @test length(result.docs) == 5
     @test isapprox(result.scores[1], 0.0004; atol = 5e-4)
+end
+
+@testset "show-ranker" begin
+    ranker = RankerModel(:tiny)
+    io = IOBuffer()
+    show(io, ranker)
+    output = String(take!(io))
+    @test occursin("RankerModel", output)
+    @test occursin("tiny", output)
+    @test occursin("BertTextEncoder", output)
+    @test occursin("InferenceSession", output)
+
+    result = RankResult("a", ["b", "c"], [1, 2], [0.1f0, 0.2f0], 0.3)
+    io = IOBuffer()
+    show(io, result)
+    output = String(take!(io))
+    @test occursin("RankResult", output)
+    @test occursin("a", output)
+    @test occursin("positions", output)
+    @test occursin("scores", output)
+    @test occursin("elapsed", output)
 end

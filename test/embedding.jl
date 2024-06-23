@@ -1,4 +1,4 @@
-using FlashRank: EmbedderModel, embed
+using FlashRank: EmbedderModel, embed, EmbedResult
 
 @testset "embed" begin
     embedder = EmbedderModel(:tiny_embed)
@@ -40,4 +40,24 @@ using FlashRank: EmbedderModel, embed
     result = embedder(texts[1])
     @test result.embeddings isa AbstractArray{Float32}
     @test size(result.embeddings) == (312, 1)
+end
+
+@testset "show-embedding" begin
+    embedder = EmbedderModel(:tiny_embed)
+    io = IOBuffer()
+    show(io, embedder)
+    output = String(take!(io))
+    @test occursin("tiny_embed", output)
+    @test occursin("BertTextEncoder", output)
+    @test occursin("InferenceSession", output)
+
+    result = EmbedResult(rand(Float32, 312, 4), 0.1)
+    io = IOBuffer()
+    show(io, result)
+    output = String(take!(io))
+    @test occursin("EmbedResult{Float32}", output)
+    @test occursin("(312, 4)", output)
+    @test occursin("0.1", output)
+    @test occursin("embeddings", output)
+    @test occursin("elapsed", output)
 end
