@@ -10,4 +10,5 @@ using Aqua
     include("loader.jl")
     include("encoder.jl")
     include("ranking.jl")
+    include("embedding.jl")
 end

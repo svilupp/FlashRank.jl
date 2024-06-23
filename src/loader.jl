@@ -21,12 +21,15 @@ function load_model(alias::Symbol)
         datadep"ms-marco-MiniLM-L-6-v2"
     elseif alias == :mini4
         datadep"ms-marco-MiniLM-L-4-v2"
+    elseif alias == :tiny_embed
+        datadep"base-TinyBERT-L-4-v2"
     else
         throw(ArgumentError("Invalid model type"))
     end
 
     # Tokenizer setup
     tok_path = find_file(model_root, "tokenizer.json")
+    special_tokens_map_path = find_file(model_root, "special_tokens_map.json")
     tok_config_path = find_file(model_root, "tokenizer_config.json")
     vocab_path = find_file(model_root, "vocab.txt")
     if !isnothing(tok_path)
@@ -49,7 +52,9 @@ function load_model(alias::Symbol)
         enc = BertTextEncoder(wp, vocab; trunc)
     elseif !isnothing(tok_config_path) && !isnothing(vocab_path)
         ## Load from tokenizer_config.json
+        special_tokens_map = JSON3.read(special_tokens_map_path)
         tok_config = JSON3.read(tok_config_path)
+        tok_config = merge(tok_config, special_tokens_map)
         vocab_list = readlines(vocab_path)
 
         ## Double check that all tokens are in vocab

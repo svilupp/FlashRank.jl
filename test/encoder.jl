@@ -212,4 +212,13 @@ using FlashRank: RankerModel, tokenize, encode
     ## Attention mask
     @test out[3][512, :] == [0, 1, 0]
     @test sum(out[3]) == 512 + 33 + 39
+
+    ### Encoding multiple sequences
+    texts = ["Hello, how are you?", "I am fine, thank you."]
+    output = encode(encoder, texts)
+    @test output[1] ==
+          [101 101; 7592 1045; 1010 2572; 2129 2986; 2024 1010; 2017 4067; 1029 2017;
+           102 1012; 0 102]
+    @test all(iszero, output[2])
+    @test output[3] == [1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 0 1]
 end
