@@ -40,6 +40,15 @@ using FlashRank: EmbedderModel, embed, EmbedResult
     result = embedder(texts[1])
     @test result.embeddings isa AbstractArray{Float32}
     @test size(result.embeddings) == (312, 1)
+
+    ## Splitting - no effect
+    result = embed(embedder, texts[1]; split_instead_trunc = true)
+    @test size(result.embeddings) == (312, 1)
+
+    # split when long text
+    long_text = repeat("Hello, how are you? ", 200)
+    result = embed(embedder, long_text; split_instead_trunc = true)
+    @test size(result.embeddings) == (312, 3)
 end
 
 @testset "show-embedding" begin

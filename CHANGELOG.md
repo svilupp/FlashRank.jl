@@ -10,8 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.0]
+
+### Added
+- Simplify embedding with the tiny models and provide native support for splitting of long strings into several smaller ones (kwarg `split_instead_trunc`)
+
 ## [0.3.0]
 
+### Added
 - Added a base Bert Tiny model to support lightning-fast embeddings (alias `tiny_embed`). See `?embed` for more details.
 
 

@@ -36,7 +36,8 @@ end
 
 """
     tokenize(enc::BertTextEncoder, text::AbstractString;
-        add_special_tokens::Bool = true, add_end_token::Bool = true, token_ids::Bool = false)
+        add_special_tokens::Bool = true, add_end_token::Bool = true, token_ids::Bool = false,
+        max_tokens::Union{Nothing, Int} = enc.trunc)
 
 Tokenizes the text and returns the tokens or token IDs (to skip looking up the IDs twice).
 
@@ -44,9 +45,11 @@ Tokenizes the text and returns the tokens or token IDs (to skip looking up the I
 - `add_special_tokens::Bool = true`: Add special tokens at the beginning and end of the text.
 - `add_end_token::Bool = true`: Add end token at the end of the text.
 - `token_ids::Bool = false`: If true, return the token IDs directly. Otherwise, return the tokens.
+- `max_tokens::Union{Nothing, Int} = enc.trunc`: The maximum number of tokens to return (usually defined by the model).
 """
 function tokenize(enc::BertTextEncoder, text::AbstractString;
-        add_special_tokens::Bool = true, add_end_token::Bool = true, token_ids::Bool = false)
+        add_special_tokens::Bool = true, add_end_token::Bool = true, token_ids::Bool = false,
+        max_tokens::Union{Nothing, Int} = enc.trunc)
     tokens = token_ids ? Int[] : String[]
     if add_special_tokens
         token = token_ids ? enc.vocab[enc.startsym] : enc.startsym
@@ -55,8 +58,8 @@ function tokenize(enc::BertTextEncoder, text::AbstractString;
     for token in bert_uncased_tokenizer(text)
         append!(tokens, enc.wp(token; token_ids))
     end
-    if !isnothing(enc.trunc) && length(tokens) > (enc.trunc - 1)
-        tokens = tokens[1:(enc.trunc - 1)]
+    if !isnothing(max_tokens) && length(tokens) > (max_tokens - 1)
+        tokens = tokens[1:(max_tokens - 1)]
     end
     if add_special_tokens || add_end_token
         token = token_ids ? enc.vocab[enc.endsym] : enc.endsym
@@ -65,11 +68,58 @@ function tokenize(enc::BertTextEncoder, text::AbstractString;
     return tokens
 end
 
-function encode(enc::BertTextEncoder, text::String; add_special_tokens::Bool = true)
-    token_ids = tokenize(enc, text; add_special_tokens, token_ids = true)
-    # Zero indexed as models are trained for Python
-    token_type_ids = zeros(Int, length(token_ids))
-    attention_mask = ones(Int, length(token_ids))
+"""
+    encode(enc::BertTextEncoder, text::String; add_special_tokens::Bool = true,
+        max_tokens::Int = enc.trunc, split_instead_trunc::Bool = false)
+
+Encodes the text and returns the token IDs, token type IDs, and attention mask.
+
+We enforce `max_tokens` to be a concrete number here to be able to do `split_instead_trunc`.
+`split_instead_trunc` splits any long sequences into several smaller ones.
+"""
+function encode(enc::BertTextEncoder, text::String; add_special_tokens::Bool = true,
+        max_tokens::Int = enc.trunc, split_instead_trunc::Bool = false)
+    if !split_instead_trunc
+        ## Standard run - if text is longer, we truncate it and ignore
+        token_ids = tokenize(enc, text; add_special_tokens, token_ids = true, max_tokens)
+        # Zero indexed as models are trained for Python
+        token_type_ids = zeros(Int, length(token_ids))
+        attention_mask = ones(Int, length(token_ids))
+    else
+        ## Split run - if text is longer, we split it into multiple chunks and encode them separately
+        ## Only possible with a single string to know where the chunks belong to
+        ## tokenize without special tokens at first
+        token_ids = tokenize(enc, text; add_special_tokens = false,
+            token_ids = true, max_tokens = nothing)
+        ## determine correct chunk size
+        start_token = enc.vocab[enc.startsym]
+        end_token = enc.vocab[enc.endsym]
+        chunk_size = max_tokens - 2 * add_special_tokens
+        itr = Iterators.partition(token_ids, chunk_size)
+        num_chunks = length(itr)
+        ## split vector in several
+        mat_token_ids = zeros(Int, max_tokens, num_chunks)
+        token_type_ids = zeros(Int, max_tokens, num_chunks)
+        attention_mask = zeros(Int, max_tokens, num_chunks)
+        @inbounds for (i, chunk) in enumerate(itr)
+            if add_special_tokens
+                mat_token_ids[1, i] = start_token
+                attention_mask[1, i] = 1
+            end
+            for ri in eachindex(chunk)
+                ## if special token, we shift all items by 1 down
+                row_idx = add_special_tokens ? ri + 1 : ri
+                mat_token_ids[row_idx, i] = chunk[ri]
+                attention_mask[row_idx, i] = 1
+            end
+            if add_special_tokens
+                row_idx = 2 + length(chunk)
+                mat_token_ids[row_idx, i] = end_token
+                attention_mask[row_idx, i] = 1
+            end
+        end
+        token_ids = mat_token_ids
+    end
     return token_ids, token_type_ids, attention_mask
 end
 
