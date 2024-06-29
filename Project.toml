@@ -1,7 +1,7 @@
 name = "FlashRank"
 uuid = "22cc3f58-1757-4700-bb45-2032706e5a8d"
 authors = ["J S <49557684+svilupp@users.noreply.github.com> and contributors"]
-version = "0.3.0"
+version = "0.4.0"
 
 [deps]
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"

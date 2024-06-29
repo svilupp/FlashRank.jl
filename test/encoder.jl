@@ -221,4 +221,36 @@ using FlashRank: RankerModel, tokenize, encode
            102 1012; 0 102]
     @test all(iszero, output[2])
     @test output[3] == [1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 1 1; 0 1]
+
+    ## # Encode with splitting
+    long_text = repeat("Hello, how are you? ", 100)
+
+    output = encode(encoder, long_text; split_instead_trunc = true)
+    @test size(output[1]) == (512, 2)
+    ## check that tokens were added correctly
+    @test output[1][1, :] == [101, 101]
+    @test output[1][end, :] == [102, 0]
+    @test output[1][93, 2] == 102
+    @test output[1][94, 2] == 0
+    @test size(output[3]) == (512, 2)
+    @test output[3][1, :] == [1, 1]
+    @test output[3][end, :] == [1, 0]
+    @test output[3][93, :] == [1, 1]
+    @test output[3][94, :] == [1, 0]
+    @test iszero(output[2])
+
+    ## Do not add special tokens
+    output = encode(
+        encoder, long_text; split_instead_trunc = true, add_special_tokens = false)
+    @test size(output[1]) == (512, 2)
+    ## check that tokens were added correctly
+    @test output[1][1, :] == [7592, 2129]
+    @test output[1][end, :] == [1010, 0]
+    @test output[1][93, 2] == 0
+    @test size(output[3]) == (512, 2)
+    @test output[3][1, :] == [1, 1]
+    @test output[3][end, :] == [1, 0]
+    @test output[3][89, :] == [1, 1]
+    @test output[3][90, :] == [1, 0]
+    @test iszero(output[2])
 end

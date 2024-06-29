@@ -75,8 +75,26 @@ function embed(
     EmbedResult(embeddings, t)
 end
 
-function embed(embedder::EmbedderModel, passages::AbstractString)
-    embed(embedder, [passages])
+"""
+    embed(
+        embedder::EmbedderModel, passage::AbstractString; split_instead_trunc::Bool = false)
+
+Embeds a single `passage`. 
+
+If passage is too long for the model AND `split_instead_trunc` is true, the passage is split into several smaller chunks of size `embedder.encoder.trunc` and embedded separately.
+"""
+function embed(
+        embedder::EmbedderModel, passage::AbstractString; split_instead_trunc::Bool = false)
+    t = @elapsed begin
+        token_ids, token_type_ids, attention_mask = encode(
+            embedder.encoder, passage; split_instead_trunc)
+        ## transpose as the model expects row-major
+        onnx_input = Dict("input_ids" => token_ids', "attention_mask" => attention_mask')
+        out = embedder.session(onnx_input)
+        ## Permute dimensions to return column-major embeddings, ie, batch-size X embedding-size
+        embeddings = out["avg_embeddings"] |> permutedims
+    end
+    EmbedResult(embeddings, t)
 end
 
 function (embedder::EmbedderModel)(
