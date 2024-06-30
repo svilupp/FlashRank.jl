@@ -33,6 +33,7 @@ Pkg.add("https://github.com/svilupp/FlashRank.jl")
 Ranking your documents for a given query is as simple as:
 
 ```julia
+ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 using FlashRank
 
 ranker = RankerModel() # Defaults to model = `:tiny`
