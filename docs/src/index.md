@@ -22,11 +22,12 @@ Tip: Pick the largest model that you can afford with your latency budget, ie, Mi
 Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
 ## Installation
-To install FlashRank.jl, simply add this repository (package is not yet registered).
+Add it to your environment simply with:
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/svilupp/FlashRank.jl")
+Pkg.activate(".")
+Pkg.add("FlashRank")
 ```
 
 ## Usage
