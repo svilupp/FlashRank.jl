@@ -22,11 +22,12 @@ Tip: Pick the largest model that you can afford with your latency budget, ie, Mi
 Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
 ## Installation
-To install FlashRank.jl, simply add this repository (package is not yet registered).
+Add it to your environment simply with:
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/svilupp/FlashRank.jl")
+Pkg.activate(".")
+Pkg.add("FlashRank")
 ```
 
 ## Usage
@@ -85,6 +86,17 @@ question = "Tell me about prehistoric animals"
 result = airag(cfg, index; question, return_all = true)
 ```
 
+## Advanced Usage
+
+You can also leverage quite "coarse" but fast embeddings with the `tiny_embed` model (Bert-L4).
+
+```julia
+embedder = FlashRank.EmbedderModel(:tiny_embed)
+
+passages = ["This is a test", "This is another test"]
+result = FlashRank.embed(embedder, passages)
+```
+
 ## Acknowledgments
 - [FlashRank](https://github.com/PrithivirajDamodaran/FlashRank) and [Transformers.jl](https://github.com/chengchingwen/Transformers.jl) have been essential in the development of this package.
 - Special thanks to Prithiviraj Damodaran for the original FlashRank and the INT8 quantized model weights.
@@ -92,3 +104,6 @@ result = airag(cfg, index; question, return_all = true)
 
 ## Roadmap
 - [ ] Provide package extension for PromptingTools
+- [ ] Bring even smaller models (eg, Ber-L2-128D)
+- [ ] Introduce a simply length-based adjustment to embedding similarity score
+- [ ] Re-upload embed models with mask-based pooling (no real difference, just theoretically correct)

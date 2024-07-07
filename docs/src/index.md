@@ -22,11 +22,12 @@ Tip: Pick the largest model that you can afford with your latency budget, ie, Mi
 Note that we're using BERT models with a maximum chunk size of 512 tokens (anything over will be truncated).
 
 ## Installation
-To install FlashRank.jl, simply add this repository (package is not yet registered).
+Add it to your environment simply with:
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/svilupp/FlashRank.jl")
+Pkg.activate(".")
+Pkg.add("FlashRank")
 ```
 
 ## Usage
@@ -82,6 +83,17 @@ cfg = RAGConfig(; retriever=RT.AdvancedRetriever(; reranker))
 ## assumes existing index
 question = "Tell me about prehistoric animals"
 result = airag(cfg, index; question, return_all = true)
+```
+
+## Advanced Usage
+
+You can also leverage quite "coarse" but fast embeddings with the `tiny_embed` model (Bert-L4).
+
+```julia
+embedder = FlashRank.EmbedderModel(:tiny_embed)
+
+passages = ["This is a test", "This is another test"]
+result = FlashRank.embed(embedder, passages)
 ```
 
 ## Acknowledgments
