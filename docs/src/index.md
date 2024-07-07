@@ -85,6 +85,17 @@ question = "Tell me about prehistoric animals"
 result = airag(cfg, index; question, return_all = true)
 ```
 
+## Advanced Usage
+
+You can also leverage quite "coarse" but fast embeddings with the `tiny_embed` model (Bert-L4).
+
+```julia
+embedder = FlashRank.EmbedderModel(:tiny_embed)
+
+passages = ["This is a test", "This is another test"]
+result = FlashRank.embed(embedder, passages)
+```
+
 ## Acknowledgments
 - [FlashRank](https://github.com/PrithivirajDamodaran/FlashRank) and [Transformers.jl](https://github.com/chengchingwen/Transformers.jl) have been essential in the development of this package.
 - Special thanks to Prithiviraj Damodaran for the original FlashRank and model weights.
